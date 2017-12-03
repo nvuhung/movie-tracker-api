@@ -35,5 +35,6 @@ routes.get('/list', (req, res, next) => {
 });
 
 routes.get('/search', controller.search);
+routes.post('/save', controller.save);
 
 export default routes;

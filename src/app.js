@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import logger from 'morgan';
 import bodyParser from 'body-parser';
+import mongoose from 'mongoose';
 import routes from './routes';
 
 const app = express();
@@ -35,6 +36,13 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
     .render('error', {
       message: err.message
     });
+});
+
+// MongoDB Connection
+mongoose.Promise = global.Promise;
+mongoose.connect('mongodb://localhost:27017/movie-tracker', { useMongoClient: true });
+mongoose.connection.on('error', () => {
+  throw new Error(`Unable to connect to database: ${mongoUri}`);
 });
 
 export default app;
