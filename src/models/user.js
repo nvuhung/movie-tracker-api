@@ -17,25 +17,4 @@ const UserSchema = new mongoose.Schema({
     }
 });
 
-UserSchema.statics = {
-    upsertFbUser:
-      (accessToken, refreshToken, profile, cb) => this.findOne({ 'facebookProvider.id': profile.id }, (err, user) => {
-          if (!user) {
-            var newUser = new UserSchema({
-                email: profile.emails[0].value,
-                facebookProvider: {
-                    id: profile.id,
-                    token: accessToken
-                }
-            })
-
-            newUser.save((error, savedUser) => {
-                return cb(error, savedUser);
-            })
-          } else {
-              return cb(err, user)
-          }
-      })
-};
-
-export default mongoose.model('Movie', MovieSchema)
+export default mongoose.model('User', UserSchema)

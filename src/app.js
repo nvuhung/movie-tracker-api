@@ -3,6 +3,8 @@ import path from 'path';
 import logger from 'morgan';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
+import cors from 'cors';
+import passport from './passport';
 import routes from './routes';
 
 const app = express();
@@ -44,5 +46,16 @@ mongoose.connect('mongodb://localhost:27017/movie-tracker', { useMongoClient: tr
 mongoose.connection.on('error', () => {
   throw new Error(`Unable to connect to database: ${mongoUri}`);
 });
+
+// Cors
+app.use(cors({
+  origin: true,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  exposedHeaders: ['x-auth-token']
+}));
+
+// Passport
+app.use(passport.initialize());
 
 export default app;
