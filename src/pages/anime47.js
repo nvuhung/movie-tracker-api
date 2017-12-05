@@ -30,34 +30,34 @@ exports.search = q => new Promise((resolve, reject) => {
   })
 })
 
-exports.save = url => new Promise((resolve, reject) => {
+exports.getMovieDetail = url => new Promise((resolve, reject) => {
   cs.get(`${DOMAIN}/${url}`, (error, response, body) => {
-    if(error) {
-      return reject(error)
-    }
-
-    let model = new Movie()
-    const element = $('.movie-detail', body)
-    const labels = element.find('dt')
-    const contents = element.find('dd')
-
-    model.provider = 'A47'
-    model.url = url
-    model.title1 = element.find('.title-1').text()
-    model.title2 = element.find('.title-2').text()
-
-    model.detail = [];
-    contents.get().forEach((ele, idx) => {
-      const label = $(labels[idx]).text()
-      const content = getAText(ele)
-      model.detail.push({label, content})
-    })
-
-    model.save((err, data) => {
-      err ? reject(err) : resolve(data)
-    })
+    error
+      ? reject(error)
+      : resolve(parseModel(url, body))
   })
 })
+
+const parseModel = (url, body) => {
+  let model = new Movie()
+  const element = $('.movie-detail', body)
+  const labels = element.find('dt')
+  const contents = element.find('dd')
+
+  model.provider = provider
+  model.url = url
+  model.title1 = element.find('.title-1').last().text()
+  model.title2 = element.find('.title-2').text() + element.find('.title-year').text()
+
+  model.detail = []
+  contents.get().forEach((ele, idx) => {
+    const label = $(labels[idx]).text()
+    const content = getAText(ele)
+    model.detail.push({label, content})
+  })
+
+  return model
+}
 
 const getAText = (ele) => {
   const aTags = $(ele).find('a').get()
