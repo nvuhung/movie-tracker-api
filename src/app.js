@@ -56,6 +56,6 @@ app.use(cors({
 }));
 
 // Passport
-app.use(passport.initialize());
+// app.use(passport.initialize());
 
 export default app;

@@ -1,8 +1,13 @@
 import {Router} from 'express'
 import controller from './controller'
-import passport from './passport';
+import passport from 'passport';
 import jwt from 'jsonwebtoken'
 import expressJwt from 'express-jwt';
+
+var passportConfig = require('./passport');
+
+//setup configuration for facebook login
+passportConfig();
 
 const routes = Router();
 
@@ -38,28 +43,75 @@ routes.get('/list', (req, res, next) => {
 });
 
 routes.get('/search', controller.search);
-
 routes.post('/save', controller.save);
 
-routes.get(
-  '/login/facebook',
-  passport.authenticate('facebook', {
-    scope: ['email', 'user_location'],
-    session: false,
-  }),
-);
+const createToken = auth => {
+  return jwt.sign(
+    {
+      id: auth.id
+    }, 'my-secret',
+    {
+      expiresIn: 60 * 120
+    }
+  );
+};
 
-routes.get(
-  '/login/facebook/return',
-  passport.authenticate('facebook', {
-    failureRedirect: '/login',
-    session: false,
-  }),
-  (req, res) => {
-    const expiresIn = 60 * 60 * 24 * 180; // 180 days
-    const token = jwt.sign(req.user, 'my-secret', { expiresIn });
-    res.redirect('/');
-  },
-);
+const generateToken = (req, res, next) => {
+  req.token = createToken(req.auth);
+  next();
+};
+
+const sendToken = (req, res) => {
+  res.setHeader('x-auth-token', req.token);
+  res.status(200).send(req.auth);
+};
+
+routes.post('/auth/facebook', passport.authenticate('facebook-token', {session: false}), (req, res, next) => {
+    if (!req.user) {
+      return res.send(401, 'User Not Authenticated');
+    }
+
+    // prepare token for API
+    req.auth = {
+      id: req.user.id
+    };
+
+    next();
+  }, generateToken, sendToken);
+
+  //token handling middleware
+const authenticate = expressJwt({
+  secret: 'my-secret',
+  requestProperty: 'auth',
+  getToken: function(req) {
+    if (req.headers['x-auth-token']) {
+      return req.headers['x-auth-token'];
+    }
+    return null;
+  }
+});
+
+const getCurrentUser = (req, res, next) => {
+  User.findById(req.auth.id, (err, user) => {
+    if (err) {
+      next(err);
+    } else {
+      req.user = user;
+      next();
+    }
+  });
+};
+
+const getOne = (req, res) => {
+  var user = req.user.toObject();
+
+  delete user['facebookProvider'];
+  delete user['__v'];
+
+  res.json(user);
+};
+
+routes.route('/auth/me')
+  .get(authenticate, getCurrentUser, getOne);
 
 export default routes;
