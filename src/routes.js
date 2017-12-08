@@ -4,9 +4,9 @@ import passport from 'passport';
 import jwt from 'jsonwebtoken'
 import expressJwt from 'express-jwt';
 
-var passportConfig = require('./passport');
+import passportConfig from './passport';
 
-//setup configuration for facebook login
+//Setup configuration for facebook login
 passportConfig();
 
 const routes = Router();
